@@ -1,4 +1,5 @@
 import { loadPipelineData } from "@/lib/load-pipeline-data";
+import { PageHeader } from "@/components/page-header";
 import { buildCampaignReport, untrackedMilestones } from "@/lib/campaigns/report";
 import { StatTile } from "@/components/leads/stat-tile";
 import { CampaignCard } from "@/components/campaigns/campaign-card";
@@ -18,7 +19,7 @@ function money(value: number) {
 }
 
 export default async function CampaignsPage() {
-  const { opportunities, contacts, events, stages, campaigns, usingMockData } =
+  const { opportunities, contacts, events, stages, campaigns, usingMockData, lastSyncedAt } =
     await loadPipelineData();
 
   const rows = buildCampaignReport(campaigns, opportunities, contacts, events, stages);
@@ -31,24 +32,14 @@ export default async function CampaignsPage() {
     totalSpend > 0 ? Math.round(((totalRevenue - totalSpend) / totalSpend) * 1000) / 10 : null;
 
   return (
-    <div className="flex flex-col gap-8 px-6 py-10 sm:px-8 sm:py-14">
-      {usingMockData && (
-        <div className="w-fit rounded-full bg-white px-4 py-1.5 text-[13px] text-muted-foreground dark:bg-card">
-          Previewing mock data
-        </div>
-      )}
-
-      <div className="max-w-2xl">
-        <p className="text-[13px] font-medium text-primary">Marketing Reports</p>
-        <h1 className="font-heading mt-2 text-[40px] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-[48px]">
-          Campaigns
-        </h1>
-        <p className="mt-4 text-[17px] leading-relaxed text-muted-foreground">
-          What each campaign cost, and what it actually produced in the
-          pipeline.
-        </p>
-      </div>
-
+    <>
+      <PageHeader
+        title="Campaigns"
+        description="What each campaign cost, and what it actually produced in the pipeline"
+        usingMockData={usingMockData}
+        lastSyncedAt={lastSyncedAt}
+      />
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-4 p-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <StatTile label="Total spend" value={money(totalSpend)} icon={Wallet} tone="violet" />
         <StatTile label="Attributed revenue" value={money(totalRevenue)} icon={TrendingUp} tone="green" />
@@ -63,11 +54,11 @@ export default async function CampaignsPage() {
 
       {campaigns.length === 0 ? (
         <Card>
-          <CardContent className="py-16 text-center">
-            <p className="font-heading text-xl font-semibold tracking-tight">
+          <CardContent className="py-14 text-center">
+            <p className="text-[15px] font-semibold tracking-tight">
               No campaigns yet
             </p>
-            <p className="mx-auto mt-2 max-w-md text-[15px] text-muted-foreground">
+            <p className="mx-auto mt-1.5 max-w-md text-[13px] text-muted-foreground">
               Campaign delivery numbers come from RG&apos;s SMS or dialer tool,
               not from GHL. Import them with{" "}
               <code className="font-mono text-[13px]">npm run import:campaigns</code>{" "}
@@ -101,5 +92,6 @@ export default async function CampaignsPage() {
         </Card>
       )}
     </div>
+    </>
   );
 }

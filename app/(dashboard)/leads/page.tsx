@@ -12,6 +12,7 @@ import { StatTile } from "@/components/leads/stat-tile";
 import { StageBarChart } from "@/components/leads/stage-bar-chart";
 import { computeKpis, formatCurrency, stageBreakdown } from "@/lib/dashboard-stats";
 import { loadPipelineData } from "@/lib/load-pipeline-data";
+import { PageHeader } from "@/components/page-header";
 import { LayoutList, DollarSign, TrendingUp, Clock, GitBranch, Table2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +55,7 @@ const stageBadgeClass = (i: number) =>
   STAGE_BADGE_CLASSES[Math.min(i, STAGE_BADGE_CLASSES.length - 1)];
 
 export default async function LeadsPage() {
-  const { opportunities: rows, usingMockData } = await loadPipelineData();
+  const { opportunities: rows, usingMockData, lastSyncedAt } = await loadPipelineData();
 
   const kpis = computeKpis(rows);
   const stages = stageBreakdown(rows);
@@ -66,24 +67,13 @@ export default async function LeadsPage() {
   }, new Map<string, number>())];
 
   return (
-    <div className="flex flex-col gap-8 px-6 py-10 sm:px-8 sm:py-14">
-      {usingMockData && (
-        <div className="w-fit rounded-full bg-white px-4 py-1.5 text-[13px] text-muted-foreground dark:bg-card">
-          Previewing mock data
-        </div>
-      )}
-
-      <div className="max-w-2xl">
-        <p className="text-[13px] font-medium text-primary">Opportunities</p>
-        <h1 className="font-heading mt-2 text-[40px] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-[48px]">
-          Open pipeline
-        </h1>
-        <p className="mt-4 text-[17px] leading-relaxed text-muted-foreground">
-          {usingMockData ? "Mock data" : "Synced from GHL"} · {rows.length}{" "}
-          opportunit{rows.length === 1 ? "y" : "ies"}
-        </p>
-      </div>
-
+    <>
+      <PageHeader
+        title="Open Pipeline"
+        usingMockData={usingMockData}
+        lastSyncedAt={lastSyncedAt}
+      />
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-4 p-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <StatTile label="Open opportunities" value={String(kpis.openCount)} icon={LayoutList} tone="blue" />
         <StatTile label="Total pipeline value" value={formatCurrency(kpis.totalValue)} icon={DollarSign} tone="green" />
@@ -92,7 +82,7 @@ export default async function LeadsPage() {
       </div>
 
       {rows.length > 0 && (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-4">
+        <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-3 lg:gap-4">
           <div className="lg:col-span-2">
             <StageBarChart data={stages} />
           </div>
@@ -108,10 +98,10 @@ export default async function LeadsPage() {
                 {pipelines.map(([pipeline, count]) => (
                   <li
                     key={pipeline}
-                    className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                    className="flex items-center justify-between py-2 first:pt-0 last:pb-0"
                   >
-                    <span className="truncate pr-3 text-[15px]">{pipeline}</span>
-                    <span className="tabular-nums text-[13px] text-muted-foreground">
+                    <span className="truncate pr-3 text-[13px]">{pipeline}</span>
+                    <span className="tabular-nums text-[12px] text-muted-foreground">
                       {count}
                     </span>
                   </li>
@@ -124,18 +114,18 @@ export default async function LeadsPage() {
 
       <Card className="gap-0 py-0">
         {rows.length === 0 ? (
-          <CardContent className="py-16 text-center">
-            <p className="font-heading text-xl font-semibold tracking-tight">
+          <CardContent className="py-14 text-center">
+            <p className="text-[15px] font-semibold tracking-tight">
               No opportunities yet
             </p>
-            <p className="mx-auto mt-2 max-w-sm text-[15px] text-muted-foreground">
+            <p className="mx-auto mt-1.5 max-w-sm text-[13px] text-muted-foreground">
               Run <code className="font-mono text-[13px]">npm run sync</code>{" "}
               against a configured GHL account to populate the pipeline.
             </p>
           </CardContent>
         ) : (
           <>
-            <CardHeader className="border-b border-black/[0.06] py-5 dark:border-white/10">
+            <CardHeader className="border-b border-black/[0.07] px-4 py-3 dark:border-white/10">
               <CardTitle className="flex items-center gap-2">
                 <Table2 className="h-4 w-4 text-muted-foreground" strokeWidth={2.25} />
                 All opportunities
@@ -173,8 +163,8 @@ export default async function LeadsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f5f5f7] text-[11px] font-medium uppercase text-foreground dark:bg-white/10">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-[9px] font-semibold uppercase text-muted-foreground dark:bg-white/10">
                           {initials(row.ownerName)}
                         </div>
                         <span className="text-muted-foreground">
@@ -200,5 +190,6 @@ export default async function LeadsPage() {
         )}
       </Card>
     </div>
+    </>
   );
 }

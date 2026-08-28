@@ -9,6 +9,15 @@ import {
   mockPipelineStages,
 } from "@/lib/mock-data";
 
+/** Most recent sync timestamp across synced opportunities, for the page header. */
+function latestSyncedAt(rows: { syncedAt: Date }[]): Date | null {
+  let latest: Date | null = null;
+  for (const row of rows) {
+    if (!latest || row.syncedAt > latest) latest = row.syncedAt;
+  }
+  return latest;
+}
+
 /**
  * Shared by every dashboard page: real GHL-synced data when a database is
  * configured, mock data otherwise (see app/(dashboard)/leads/page.tsx for
@@ -30,6 +39,7 @@ export async function loadPipelineData() {
       events: eventRows,
       stages: stageRows,
       campaigns: campaignRows,
+      lastSyncedAt: latestSyncedAt(opportunityRows),
       usingMockData: false,
     };
   } catch {
@@ -39,6 +49,7 @@ export async function loadPipelineData() {
       events: mockPipelineEvents,
       stages: mockPipelineStages,
       campaigns: mockCampaigns,
+      lastSyncedAt: latestSyncedAt(mockOpportunities),
       usingMockData: true,
     };
   }

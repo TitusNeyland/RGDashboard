@@ -1,4 +1,5 @@
 import { loadPipelineData } from "@/lib/load-pipeline-data";
+import { PageHeader } from "@/components/page-header";
 import { evaluateLeadRules, RULE_CATALOG } from "@/lib/rules/lead-rules";
 import { StatTile } from "@/components/leads/stat-tile";
 import { FlagCard } from "@/components/leads/flag-card";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 const RULE_LABELS = new Map(RULE_CATALOG.map((r) => [r.id, r.label]));
 
 export default async function AttentionPage() {
-  const { opportunities, contacts, events, usingMockData } = await loadPipelineData();
+  const { opportunities, contacts, events, usingMockData, lastSyncedAt } = await loadPipelineData();
   const flags = evaluateLeadRules(opportunities, contacts, events);
   const pendingRules = RULE_CATALOG.filter((r) => r.status === "needs-data");
 
@@ -22,24 +23,13 @@ export default async function AttentionPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 px-6 py-10 sm:px-8 sm:py-14">
-      {usingMockData && (
-        <div className="w-fit rounded-full bg-white px-4 py-1.5 text-[13px] text-muted-foreground dark:bg-card">
-          Previewing mock data
-        </div>
-      )}
-
-      <div className="max-w-2xl">
-        <p className="text-[13px] font-medium text-primary">Lead Manager</p>
-        <h1 className="font-heading mt-2 text-[40px] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-[48px]">
-          Needs attention
-        </h1>
-        <p className="mt-4 text-[17px] leading-relaxed text-muted-foreground">
-          {flags.length} flagged lead{flags.length === 1 ? "" : "s"} across{" "}
-          {RULE_CATALOG.filter((r) => r.status === "active").length} active checks.
-        </p>
-      </div>
-
+    <>
+      <PageHeader
+        title="Needs Attention"
+        usingMockData={usingMockData}
+        lastSyncedAt={lastSyncedAt}
+      />
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-4 p-6">
       <div className="grid grid-cols-3 gap-3 lg:gap-4">
         <StatTile label="High priority" value={String(counts.high)} icon={AlertCircle} tone="red" />
         <StatTile label="Medium priority" value={String(counts.medium)} icon={AlertTriangle} tone="amber" />
@@ -48,11 +38,11 @@ export default async function AttentionPage() {
 
       {flags.length === 0 ? (
         <Card>
-          <CardContent className="py-16 text-center">
-            <p className="font-heading text-xl font-semibold tracking-tight">
+          <CardContent className="py-14 text-center">
+            <p className="text-[15px] font-semibold tracking-tight">
               Nothing flagged
             </p>
-            <p className="mx-auto mt-2 max-w-sm text-[15px] text-muted-foreground">
+            <p className="mx-auto mt-1.5 max-w-sm text-[13px] text-muted-foreground">
               Every open opportunity clears the active checks below.
             </p>
           </CardContent>
@@ -71,5 +61,6 @@ export default async function AttentionPage() {
 
       <PendingRulesPanel rules={pendingRules} />
     </div>
+    </>
   );
 }
