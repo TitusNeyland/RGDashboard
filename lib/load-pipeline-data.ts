@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { campaigns, contacts, opportunities, pipelineEvents, pipelineStages, users } from "@/drizzle/schema";
-import { asc, desc } from "drizzle-orm";
+import { asc, desc, inArray, isNotNull } from "drizzle-orm";
 import {
   mockCampaigns,
   mockContacts,
@@ -20,7 +20,23 @@ export async function loadPipelineData() {
     const [opportunityRows, contactRows, eventRows, stageRows, campaignRows, userRows] =
       await Promise.all([
         db.select().from(opportunities).orderBy(desc(opportunities.ghlUpdatedAt)),
-        db.select().from(contacts),
+        // Only contacts attached to an opportunity. The location has 31,000+
+        // contacts but ~3,000 opportunities, and contacts carry a full JSONB
+        // payload — loading all of them added seconds to every page render
+        // for rows nothing displays. Uses a subquery rather than an id list
+        // so the parameter count stays constant.
+        db
+          .select()
+          .from(contacts)
+          .where(
+            inArray(
+              contacts.ghlId,
+              db
+                .select({ id: opportunities.contactGhlId })
+                .from(opportunities)
+                .where(isNotNull(opportunities.contactGhlId))
+            )
+          ),
         db.select().from(pipelineEvents).orderBy(desc(pipelineEvents.occurredAt)),
         db.select().from(pipelineStages).orderBy(asc(pipelineStages.position)),
         db.select().from(campaigns).orderBy(asc(campaigns.name)),

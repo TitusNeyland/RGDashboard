@@ -192,6 +192,8 @@ export const KPI_CALCULATORS: Record<string, KpiCalculator> = {
   // ------------------------------------------------------------- marketing
   marketing_spend: (_t, _w, c) => {
     const spend = totalSpendDollars(c.campaigns);
+    // No campaigns imported at all is absence of data, not zero spend.
+    if (c.campaigns.length === 0) return { ...EMPTY };
     return { ...EMPTY, value: spend, sampleSize: c.campaigns.length };
   },
   reply_rate: (_t, _w, c) => {
@@ -209,7 +211,9 @@ export const KPI_CALCULATORS: Record<string, KpiCalculator> = {
   cost_per_contract: (t, w, c) => {
     const contracts = flowCount(t.facts, reached("contracts"), w).length;
     const spend = totalSpendDollars(c.campaigns);
-    if (contracts === 0) return { ...EMPTY, denominator: 0 };
+    // No spend recorded is missing data, not free acquisition. Reporting $0
+    // would read as "these contracts cost nothing".
+    if (spend <= 0 || contracts === 0) return { ...EMPTY, denominator: 0 };
     return {
       ...EMPTY,
       value: spend / contracts,
@@ -221,7 +225,7 @@ export const KPI_CALCULATORS: Record<string, KpiCalculator> = {
   cost_per_qualified_lead: (t, w, c) => {
     const qualified = flowCount(t.facts, reached("qualified"), w).length;
     const spend = totalSpendDollars(c.campaigns);
-    if (qualified === 0) return { ...EMPTY, denominator: 0 };
+    if (spend <= 0 || qualified === 0) return { ...EMPTY, denominator: 0 };
     return {
       ...EMPTY,
       value: spend / qualified,

@@ -188,6 +188,18 @@ export function buildKpiFacts(data: KpiSourceData, asOf: Date): KpiFactTable {
 
     for (const event of events) {
       if (!event.toStageId) continue;
+
+      // Skip backfill observations. On the first sync every opportunity gets
+      // one synthetic event recording where it ALREADY sits — we never
+      // watched it move there. An event with no from-stage that lands
+      // mid-funnel is such an observation, not a transition.
+      //
+      // Dating milestones from these makes a lead look like it crossed the
+      // entire funnel in one instant, which produced 100% appointment-to-offer
+      // and offer-to-contract rates against RG's real data. A genuinely new
+      // lead entering at position 0 is a real entry and is kept.
+      const observedPosition = positionByStageId.get(event.toStageId);
+      if (event.fromStageId == null && (observedPosition ?? 0) > 0) continue;
       // A move into a terminal lost stage is not progress — those stages sit
       // at the end of a GHL pipeline, so counting the position would credit
       // a dead lead with every milestone before it.

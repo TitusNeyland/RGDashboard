@@ -11,12 +11,19 @@ import { ArrowLeft, Calculator, FileText } from "lucide-react";
 export const dynamic = "force-static";
 
 /**
- * Enumerated so the GitHub Pages static export can prerender every lead.
- * In a normal server deployment this just warms the common pages.
+ * Prerendered lead pages.
+ *
+ * CAPPED DELIBERATELY. Against RG's real account this returns 3,000+
+ * opportunities, and Next builds a page per param — each one loading the full
+ * dataset. That turned `next build` into an hours-long job. On Vercel the
+ * remaining ids render on demand (dynamicParams defaults to true); on the
+ * static export only mock data is present, which is well under the cap.
  */
+const MAX_PRERENDERED_LEADS = 25;
+
 export async function generateStaticParams() {
   const { opportunities } = await loadPipelineData();
-  return opportunities.map((o) => ({ id: o.id }));
+  return opportunities.slice(0, MAX_PRERENDERED_LEADS).map((o) => ({ id: o.id }));
 }
 
 function Fact({ label, value }: { label: string; value: string }) {

@@ -7,8 +7,45 @@ import "dotenv/config";
 import { GhlClient, type GhlContact, type GhlOpportunity } from "@/lib/ghl/client";
 import { db } from "@/lib/db";
 import { contacts, opportunities, pipelineEvents, pipelineStages, users } from "@/drizzle/schema";
-import { eq } from "drizzle-orm";
+import { getTableColumns, sql } from "drizzle-orm";
+import type { PgTable } from "drizzle-orm/pg-core";
 import { classifyStageEvent } from "@/lib/pipeline-events/classify";
+
+/** Rows per statement. Keeps each request well inside Neon's payload limits. */
+const BATCH_SIZE = 500;
+
+/**
+ * Upserts in batches instead of one statement per row.
+ *
+ * The original loop issued a round trip per record, which against a real GHL
+ * account (9,000+ contacts) ran for over ten minutes. That is not merely slow:
+ * app/api/cron/sync/route.ts caps at 60 seconds, so the SCHEDULED sync could
+ * never finish — it would time out partway through contacts and never reach
+ * opportunities, meaning the deployed app would silently never see a deal.
+ *
+ * `excluded` refers to the row Postgres was about to insert, so conflicting
+ * rows take the incoming values.
+ */
+async function batchUpsert<T extends PgTable>(
+  table: T,
+  rows: Record<string, unknown>[],
+  conflictColumn: unknown,
+  updateKeys: string[]
+): Promise<number> {
+  if (rows.length === 0) return 0;
+  const columns = getTableColumns(table) as Record<string, { name: string }>;
+  const set = Object.fromEntries(
+    updateKeys.map((key) => [key, sql.raw(`excluded."${columns[key].name}"`)])
+  );
+
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    await db
+      .insert(table)
+      .values(rows.slice(i, i + BATCH_SIZE) as never)
+      .onConflictDoUpdate({ target: conflictColumn as never, set: set as never });
+  }
+  return rows.length;
+}
 
 function contactRow(c: GhlContact) {
   return {
@@ -103,66 +140,72 @@ async function main() {
     }
   }
 
-  let contactCount = 0;
-  for await (const contact of client.iterateContacts()) {
-    const { ghlId, ...update } = contactRow(contact);
-    await db
-      .insert(contacts)
-      .values({ ghlId, ...update })
-      .onConflictDoUpdate({ target: contacts.ghlId, set: update });
-    contactCount++;
-  }
+  const contactRows: Record<string, unknown>[] = [];
+  for await (const contact of client.iterateContacts()) contactRows.push(contactRow(contact));
+  const contactCount = await batchUpsert(contacts, contactRows, contacts.ghlId, [
+    "name", "email", "phone", "raw", "syncedAt",
+  ]);
 
-  let opportunityCount = 0;
-  let eventCount = 0;
+  // Prior stage state for every opportunity in ONE query. Poll-diff needs to
+  // compare against what we last stored, and doing that per row was the other
+  // round trip making the sync unusable.
+  const previous = new Map(
+    (
+      await db
+        .select({
+          ghlId: opportunities.ghlId,
+          stageId: opportunities.stageId,
+          stageName: opportunities.stageName,
+          status: opportunities.status,
+        })
+        .from(opportunities)
+    ).map((row) => [row.ghlId, row])
+  );
+
+  const opportunityRows: Record<string, unknown>[] = [];
+  const eventRows: Record<string, unknown>[] = [];
+
   for await (const opp of client.iterateOpportunities()) {
-    const { ghlId, ...update } = opportunityRow(opp, pipelineNames, stageNames, userNames);
+    const row = opportunityRow(opp, pipelineNames, stageNames, userNames);
+    opportunityRows.push(row);
 
-    // Poll-diff pipeline event tracking (see drizzle/schema.ts pipelineEvents
-    // doc comment): GHL doesn't hand us stage-change history, so we detect
-    // it ourselves by comparing against what we last synced, before that
-    // row gets overwritten below.
-    const [existing] = await db
-      .select({
-        stageId: opportunities.stageId,
-        stageName: opportunities.stageName,
-        status: opportunities.status,
-      })
-      .from(opportunities)
-      .where(eq(opportunities.ghlId, ghlId))
-      .limit(1);
-
-    await db
-      .insert(opportunities)
-      .values({ ghlId, ...update })
-      .onConflictDoUpdate({ target: opportunities.ghlId, set: update });
-    opportunityCount++;
-
-    const stageChanged = update.stageId != null && update.stageId !== existing?.stageId;
-    if (stageChanged) {
-      const occurredAt = opp.lastStageChangeAt
-        ? new Date(opp.lastStageChangeAt)
-        : opp.updatedAt
-          ? new Date(opp.updatedAt)
-          : new Date();
-      await db.insert(pipelineEvents).values({
-        opportunityGhlId: ghlId,
+    const existing = previous.get(row.ghlId);
+    if (row.stageId != null && row.stageId !== existing?.stageId) {
+      eventRows.push({
+        opportunityGhlId: row.ghlId,
         fromStageId: existing?.stageId ?? null,
         fromStageName: existing?.stageName ?? null,
-        toStageId: update.stageId,
-        toStageName: update.stageName,
+        toStageId: row.stageId,
+        toStageName: row.stageName,
         eventType: classifyStageEvent({
           fromStageName: existing?.stageName ?? null,
           fromStatus: existing?.status ?? null,
-          toStageName: update.stageName,
-          toStatus: update.status,
+          toStageName: row.stageName,
+          toStatus: row.status,
         }),
-        occurredAt,
+        occurredAt: opp.lastStageChangeAt
+          ? new Date(opp.lastStageChangeAt)
+          : opp.updatedAt
+            ? new Date(opp.updatedAt)
+            : new Date(),
         source: "poll_diff",
         raw: opp,
       });
-      eventCount++;
     }
+  }
+
+  const opportunityCount = await batchUpsert(
+    opportunities,
+    opportunityRows,
+    opportunities.ghlId,
+    ["contactGhlId","name","pipelineId","pipelineName","stageId","stageName","status",
+     "ownerGhlId","ownerName","source","monetaryValue","raw","ghlCreatedAt","ghlUpdatedAt","syncedAt"]
+  );
+
+  let eventCount = 0;
+  for (let i = 0; i < eventRows.length; i += BATCH_SIZE) {
+    await db.insert(pipelineEvents).values(eventRows.slice(i, i + BATCH_SIZE) as never);
+    eventCount += Math.min(BATCH_SIZE, eventRows.length - i);
   }
 
   console.log(
