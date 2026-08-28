@@ -130,7 +130,7 @@ export type KpiCalculator = (
 
 export const KPI_CALCULATORS: Record<string, KpiCalculator> = {
   // ------------------------------------------------------ conversion (cohort)
-  lead_to_appointment: (t, w, _c) => {
+  lead_to_appointment: (t, w) => {
     const { matured, pending } = cohort(t.facts, (f) => f.createdAt, w, 14);
     return rate(matured, pending, (f) => f.firstReachedAt.appointments != null);
   },
