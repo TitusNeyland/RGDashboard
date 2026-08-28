@@ -13,6 +13,8 @@
  * rather than treated as authoritative.
  */
 
+import type { FunnelStepKey } from "@/lib/pipeline-events/funnel-steps";
+
 export type KpiCategory =
   | "revenue"
   | "conversion"
@@ -86,6 +88,12 @@ export interface KpiDefinition {
   blockedBy: string | null;
   /** Shown alongside the value when the number is real but qualified. */
   caveat?: string;
+  /**
+   * Milestone this KPI cannot be computed without. When no pipeline stage
+   * represents it, the KPI reports that specific gap rather than "no records
+   * in this window", which would read as a business result of zero.
+   */
+  requiresMilestone?: FunnelStepKey;
 }
 
 export const KPI_DEFINITIONS: KpiDefinition[] = [
@@ -500,6 +508,7 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
       whenLow: ["Targeting and list quality are working"],
       whenHigh: ["Lists or targeting are producing volume without qualification"],
     },
+    requiresMilestone: "qualified",
     blockedBy: null,
     caveat: "Divides all-time spend by period qualified leads — spend has no history to scope by window.",
   },

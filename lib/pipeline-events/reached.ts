@@ -1,13 +1,30 @@
 import type { opportunities, pipelineEvents, pipelineStages } from "@/drizzle/schema";
 import { stageMatchesStep, type FunnelStepKey } from "@/lib/pipeline-events/funnel-steps";
+import {
+  hasExplicitConfig,
+  isNonProgressStageId,
+  MILESTONE_STAGE_IDS,
+} from "@/lib/pipeline-config";
 
 type OpportunityRow = typeof opportunities.$inferSelect;
 type PipelineEventRow = typeof pipelineEvents.$inferSelect;
 type PipelineStageRow = typeof pipelineStages.$inferSelect;
 
-const LOST_KEYWORDS = ["lost", "dead", "abandon"];
+const LOST_KEYWORDS = ["lost", "dead", "abandon", "not a fit", "fell through", "disqualified"];
 
-export function isTerminalLostStage(stageName: string | null) {
+/**
+ * True when a stage should not count as forward progress.
+ *
+ * Prefers the explicit stage-id config, which also covers holding states that
+ * are not "lost" but are not progress either — RG's "Needs Follow up" sits
+ * after "closed" in display order, so position alone would credit a parked
+ * lead with a closed deal.
+ */
+export function isTerminalLostStage(
+  stageName: string | null,
+  stageId?: string | null
+) {
+  if (isNonProgressStageId(stageId)) return true;
   if (!stageName) return false;
   const n = stageName.toLowerCase();
   return LOST_KEYWORDS.some((k) => n.includes(k));
@@ -27,10 +44,19 @@ export function buildStageIndex(stageRows: PipelineStageRow[]) {
   const milestonePositions = new Map<string, Map<FunnelStepKey, number>>();
   for (const stage of stageRows) {
     const perPipeline = milestonePositions.get(stage.pipelineId) ?? new Map();
-    for (const key of OUTCOME_KEYS) {
-      if (!stageMatchesStep(stage.stageName, key)) continue;
-      const current = perPipeline.get(key);
-      if (current == null || stage.position < current) perPipeline.set(key, stage.position);
+
+    if (hasExplicitConfig(stage.pipelineId)) {
+      // Configured pipeline: stage IDs are authoritative, keywords ignored.
+      for (const [key, stageId] of Object.entries(MILESTONE_STAGE_IDS)) {
+        if (stageId !== stage.stageId) continue;
+        perPipeline.set(key as FunnelStepKey, stage.position);
+      }
+    } else {
+      for (const key of OUTCOME_KEYS) {
+        if (!stageMatchesStep(stage.stageName, key)) continue;
+        const current = perPipeline.get(key);
+        if (current == null || stage.position < current) perPipeline.set(key, stage.position);
+      }
     }
     milestonePositions.set(stage.pipelineId, perPipeline);
   }
@@ -70,7 +96,7 @@ export function maxReachedPosition(
 
   let max: number | null = null;
   for (const stageId of candidateStageIds) {
-    if (isTerminalLostStage(nameByStageId.get(stageId) ?? null)) continue;
+    if (isTerminalLostStage(nameByStageId.get(stageId) ?? null, stageId)) continue;
     const position = positionByStageId.get(stageId);
     if (position == null) continue;
     if (max == null || position > max) max = position;

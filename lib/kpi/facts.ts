@@ -12,6 +12,7 @@ import {
   untrackedMilestones,
 } from "@/lib/pipeline-events/reached";
 import { stageMatchesStep, type FunnelStepKey } from "@/lib/pipeline-events/funnel-steps";
+import { isAcquisitionPipeline, ACQUISITION_PIPELINE_NAME } from "@/lib/pipeline-config";
 
 type OpportunityRow = typeof opportunities.$inferSelect;
 type PipelineEventRow = typeof pipelineEvents.$inferSelect;
@@ -62,7 +63,11 @@ export interface KpiFactTable {
   observabilityStart: Date | null;
   /** Milestones with no matching stage in any pipeline — "not tracked", never 0. */
   untracked: FunnelStepKey[];
+  /** Opportunities inside the acquisition funnel. */
   totalOpportunities: number;
+  /** Opportunities in other pipelines, deliberately excluded from all KPIs. */
+  excludedOpportunities: number;
+  pipelineName: string;
 }
 
 export interface KpiSourceData {
@@ -159,7 +164,13 @@ export function buildKpiFacts(data: KpiSourceData, asOf: Date): KpiFactTable {
     }
   }
 
-  const facts: OpportunityFact[] = data.opportunities.map((opportunity) => {
+  // KPIs cover the acquisition funnel only. The location has 12 pipelines,
+  // most of which track something other than seller deals — employee
+  // onboarding, partner recruiting, nurture and lead-score buckets. Including
+  // them would put apprentices and partners in the conversion denominators.
+  const scoped = data.opportunities.filter((o) => isAcquisitionPipeline(o.pipelineId));
+
+  const facts: OpportunityFact[] = scoped.map((opportunity) => {
     const events = normalizeEvents(
       eventsByOpportunity.get(opportunity.ghlId) ?? [],
       opportunity.ghlCreatedAt,
@@ -235,6 +246,8 @@ export function buildKpiFacts(data: KpiSourceData, asOf: Date): KpiFactTable {
     byGhlId: new Map(facts.map((f) => [f.ghlId, f])),
     observabilityStart,
     untracked,
-    totalOpportunities: data.opportunities.length,
+    totalOpportunities: scoped.length,
+    excludedOpportunities: data.opportunities.length - scoped.length,
+    pipelineName: ACQUISITION_PIPELINE_NAME,
   };
 }

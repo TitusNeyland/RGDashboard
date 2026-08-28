@@ -28,10 +28,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "SMS - Jackson Absentee Owner",
     contactGhlId: "mock-contact-1",
     name: "412 Maple St, Jackson MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-offer",
-    stageName: "Offer Made",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "42f0caff-969f-40e0-99b8-5ef839e03812",
+    stageName: "Offer Sent/ Negotiating",
     status: "open",
     ownerGhlId: "mock-owner-1",
     ownerName: "Devin R.",
@@ -47,10 +47,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "SMS - Jackson Absentee Owner",
     contactGhlId: "mock-contact-2",
     name: "88 Cedar Ave, Ridgeland MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-appt",
-    stageName: "Appointment Set",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "b940d2af-4cf4-494c-a507-a035c7e83caa",
+    stageName: "APPOINTMENT SET",
     status: "open",
     ownerGhlId: "mock-owner-2",
     ownerName: "Priya K.",
@@ -66,10 +66,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "SMS - Jackson Absentee Owner",
     contactGhlId: "mock-contact-3",
     name: "215 Willow Dr, Clinton MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-contract",
-    stageName: "Under Contract",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "60ed85ef-5e19-49e0-a6ea-0884fe35abb8",
+    stageName: "Under contract",
     status: "open",
     ownerGhlId: "mock-owner-1",
     ownerName: "Devin R.",
@@ -85,10 +85,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "Cold Call - Hinds County",
     contactGhlId: "mock-contact-4",
     name: "1029 Birch Ln, Pearl MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-qualified",
-    stageName: "Qualified",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "40b8aba6-6be9-49e5-9025-8f7178eab64d",
+    stageName: "MANUAL TEXT/ CALLED",
     status: "open",
     ownerGhlId: null,
     ownerName: null,
@@ -104,10 +104,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "SMS - Jackson Absentee Owner",
     contactGhlId: "mock-contact-5",
     name: "77 Sycamore Ct, Flowood MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-new",
-    stageName: "New Lead",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "09f34606-394f-4fec-a2e1-c824772626ab",
+    stageName: "AI LEAD NOTIFICATION",
     status: "open",
     ownerGhlId: "mock-owner-3",
     ownerName: "Marcus T.",
@@ -123,10 +123,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "Cold Call - Hinds County",
     contactGhlId: "mock-contact-6",
     name: "530 Poplar St, Brandon MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-contacted",
-    stageName: "Contacted",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "a270a344-5615-4596-bab7-569cd020c6f9",
+    stageName: "1st CALL",
     status: "open",
     ownerGhlId: "mock-owner-2",
     ownerName: "Priya K.",
@@ -144,10 +144,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "SMS - Jackson Absentee Owner",
     contactGhlId: "mock-contact-2", // same contact as mock-2 -> duplicate-opportunity
     name: "88 Cedar Ave, Ridgeland MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-new",
-    stageName: "New Lead",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "09f34606-394f-4fec-a2e1-c824772626ab",
+    stageName: "AI LEAD NOTIFICATION",
     status: "open",
     ownerGhlId: "mock-owner-2",
     ownerName: "Priya K.",
@@ -163,10 +163,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: null,
     contactGhlId: "mock-contact-8", // tagged "Hot Lead" -> hot-lead-uncontacted
     name: "9 Fawn Trail, Terry MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-new",
-    stageName: "New Lead",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "09f34606-394f-4fec-a2e1-c824772626ab",
+    stageName: "AI LEAD NOTIFICATION",
     status: "open",
     ownerGhlId: "mock-owner-3",
     ownerName: "Marcus T.",
@@ -182,10 +182,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "SMS - Jackson Absentee Owner",
     contactGhlId: "mock-contact-9",
     name: "12 Oakwood Rd, Madison MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-lost",
-    stageName: "Closed Lost", // status still "open" -> conflicting-status
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "392b72de-334e-4394-a8ca-2da2b16102a6",
+    stageName: "Lost", // status still "open" -> conflicting-status
     status: "open",
     ownerGhlId: "mock-owner-1",
     ownerName: "Devin R.",
@@ -201,10 +201,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "Cold Call - Hinds County",
     contactGhlId: "mock-contact-10",
     name: "64 Hollow Creek Dr, Byram MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-contacted",
-    stageName: "Contacted", // 35 days no update -> stalled-in-stage (high)
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "a270a344-5615-4596-bab7-569cd020c6f9",
+    stageName: "1st CALL", // 35 days no update -> stalled-in-stage (high)
     status: "open",
     ownerGhlId: "mock-owner-2",
     ownerName: "Priya K.",
@@ -222,10 +222,10 @@ export const mockOpportunities: OpportunityRow[] = [
     source: "SMS - Jackson Absentee Owner",
     contactGhlId: "mock-contact-11",
     name: "301 Ridge Rd, Jackson MS",
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
-    stageId: "mock-stage-won",
-    stageName: "Closed Won",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
+    stageId: "3f154b00-0c74-4de6-ab65-79d665068e32",
+    stageName: "closed",
     status: "won",
     ownerGhlId: "mock-owner-1",
     ownerName: "Devin R.",
@@ -256,24 +256,24 @@ function event(
 
 export const mockPipelineEvents: PipelineEventRow[] = [
   // 412 Maple St — full run from New Lead to an offer.
-  event({ opportunityGhlId: "mock-ghl-1", fromStageId: null, fromStageName: null, toStageId: "mock-stage-new", toStageName: "New Lead", occurredAt: hoursAgo(96) }),
-  event({ opportunityGhlId: "mock-ghl-1", fromStageId: "mock-stage-new", fromStageName: "New Lead", toStageId: "mock-stage-contacted", toStageName: "Contacted", occurredAt: hoursAgo(70) }),
-  event({ opportunityGhlId: "mock-ghl-1", fromStageId: "mock-stage-contacted", fromStageName: "Contacted", toStageId: "mock-stage-qualified", toStageName: "Qualified", occurredAt: hoursAgo(40) }),
-  event({ opportunityGhlId: "mock-ghl-1", fromStageId: "mock-stage-qualified", fromStageName: "Qualified", toStageId: "mock-stage-offer", toStageName: "Offer Made", eventType: "offer", occurredAt: hoursAgo(2) }),
+  event({ opportunityGhlId: "mock-ghl-1", fromStageId: null, fromStageName: null, toStageId: "09f34606-394f-4fec-a2e1-c824772626ab", toStageName: "AI LEAD NOTIFICATION", occurredAt: hoursAgo(96) }),
+  event({ opportunityGhlId: "mock-ghl-1", fromStageId: "09f34606-394f-4fec-a2e1-c824772626ab", fromStageName: "AI LEAD NOTIFICATION", toStageId: "a270a344-5615-4596-bab7-569cd020c6f9", toStageName: "1st CALL", occurredAt: hoursAgo(70) }),
+  event({ opportunityGhlId: "mock-ghl-1", fromStageId: "a270a344-5615-4596-bab7-569cd020c6f9", fromStageName: "1st CALL", toStageId: "40b8aba6-6be9-49e5-9025-8f7178eab64d", toStageName: "MANUAL TEXT/ CALLED", occurredAt: hoursAgo(40) }),
+  event({ opportunityGhlId: "mock-ghl-1", fromStageId: "40b8aba6-6be9-49e5-9025-8f7178eab64d", fromStageName: "MANUAL TEXT/ CALLED", toStageId: "42f0caff-969f-40e0-99b8-5ef839e03812", toStageName: "Offer Sent/ Negotiating", eventType: "offer", occurredAt: hoursAgo(2) }),
 
   // 215 Willow Dr — offer accepted, now under contract.
-  event({ opportunityGhlId: "mock-ghl-3", fromStageId: "mock-stage-offer", fromStageName: "Offer Made", toStageId: "mock-stage-contract", toStageName: "Under Contract", eventType: "contract", occurredAt: hoursAgo(5) }),
+  event({ opportunityGhlId: "mock-ghl-3", fromStageId: "42f0caff-969f-40e0-99b8-5ef839e03812", fromStageName: "Offer Sent/ Negotiating", toStageId: "60ed85ef-5e19-49e0-a6ea-0884fe35abb8", toStageName: "Under contract", eventType: "contract", occurredAt: hoursAgo(5) }),
 
   // 12 Oakwood Rd — lost.
-  event({ opportunityGhlId: "mock-ghl-9", fromStageId: "mock-stage-contacted", fromStageName: "Contacted", toStageId: "mock-stage-lost", toStageName: "Closed Lost", eventType: "lost", occurredAt: hoursAgo(10) }),
+  event({ opportunityGhlId: "mock-ghl-9", fromStageId: "a270a344-5615-4596-bab7-569cd020c6f9", fromStageName: "1st CALL", toStageId: "392b72de-334e-4394-a8ca-2da2b16102a6", toStageName: "Lost", eventType: "lost", occurredAt: hoursAgo(10) }),
 
   // 64 Hollow Creek Dr — was lost, came back, then sat for 35 days.
-  event({ opportunityGhlId: "mock-ghl-10", fromStageId: "mock-stage-lost", fromStageName: "Closed Lost", toStageId: "mock-stage-contacted", toStageName: "Contacted", eventType: "reactivation", occurredAt: hoursAgo(24 * 36) }),
+  event({ opportunityGhlId: "mock-ghl-10", fromStageId: "392b72de-334e-4394-a8ca-2da2b16102a6", fromStageName: "Lost", toStageId: "a270a344-5615-4596-bab7-569cd020c6f9", toStageName: "1st CALL", eventType: "reactivation", occurredAt: hoursAgo(24 * 36) }),
 
   // Everyday stage moves for the rest of the mock leads.
-  event({ opportunityGhlId: "mock-ghl-2", fromStageId: "mock-stage-new", fromStageName: "New Lead", toStageId: "mock-stage-appt", toStageName: "Appointment Set", occurredAt: hoursAgo(20) }),
-  event({ opportunityGhlId: "mock-ghl-6", fromStageId: "mock-stage-new", fromStageName: "New Lead", toStageId: "mock-stage-contacted", toStageName: "Contacted", occurredAt: hoursAgo(28) }),
-  event({ opportunityGhlId: "mock-ghl-8", fromStageId: null, fromStageName: null, toStageId: "mock-stage-new", toStageName: "New Lead", occurredAt: hoursAgo(50) }),
+  event({ opportunityGhlId: "mock-ghl-2", fromStageId: "09f34606-394f-4fec-a2e1-c824772626ab", fromStageName: "AI LEAD NOTIFICATION", toStageId: "b940d2af-4cf4-494c-a507-a035c7e83caa", toStageName: "APPOINTMENT SET", occurredAt: hoursAgo(20) }),
+  event({ opportunityGhlId: "mock-ghl-6", fromStageId: "09f34606-394f-4fec-a2e1-c824772626ab", fromStageName: "AI LEAD NOTIFICATION", toStageId: "a270a344-5615-4596-bab7-569cd020c6f9", toStageName: "1st CALL", occurredAt: hoursAgo(28) }),
+  event({ opportunityGhlId: "mock-ghl-8", fromStageId: null, fromStageName: null, toStageId: "09f34606-394f-4fec-a2e1-c824772626ab", toStageName: "AI LEAD NOTIFICATION", occurredAt: hoursAgo(50) }),
 ].sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime());
 
 function stageRow(
@@ -283,8 +283,8 @@ function stageRow(
 ): PipelineStageRow {
   return {
     id: `mock-stage-row-${position}`,
-    pipelineId: "mock-pipeline",
-    pipelineName: "Acquisitions Pipeline",
+    pipelineId: "VwDHYOpeE22Qq3SBd9Fj",
+    pipelineName: "THE RG WAY",
     stageId,
     stageName,
     position,
@@ -292,18 +292,22 @@ function stageRow(
   };
 }
 
-// Real GHL order for the mock pipeline's stages — the opportunities above
-// reference these stageIds. "Closed Lost" sits last positionally but is
-// excluded from forward-funnel conversion math (see lib/pipeline-dashboard.ts).
+// Mirrors THE RG WAY, RG's real acquisition funnel, using its actual
+// pipeline and stage IDs (read via `npm run discover`). Keeping the mock
+// aligned to production means the pipeline filter and milestone config
+// behave identically here and against live data.
 export const mockPipelineStages: PipelineStageRow[] = [
-  stageRow(0, "mock-stage-new", "New Lead"),
-  stageRow(1, "mock-stage-contacted", "Contacted"),
-  stageRow(2, "mock-stage-qualified", "Qualified"),
-  stageRow(3, "mock-stage-appt", "Appointment Set"),
-  stageRow(4, "mock-stage-offer", "Offer Made"),
-  stageRow(5, "mock-stage-contract", "Under Contract"),
-  stageRow(6, "mock-stage-won", "Closed Won"),
-  stageRow(7, "mock-stage-lost", "Closed Lost"),
+  stageRow(0, "09f34606-394f-4fec-a2e1-c824772626ab", "AI LEAD NOTIFICATION"),
+  stageRow(1, "40b8aba6-6be9-49e5-9025-8f7178eab64d", "MANUAL TEXT/ CALLED"),
+  stageRow(2, "a270a344-5615-4596-bab7-569cd020c6f9", "1st CALL"),
+  stageRow(3, "b940d2af-4cf4-494c-a507-a035c7e83caa", "APPOINTMENT SET"),
+  stageRow(4, "0aeb11dd-0923-4e14-b15b-0430c2d76a03", "Appointment completed"),
+  stageRow(5, "42f0caff-969f-40e0-99b8-5ef839e03812", "Offer Sent/ Negotiating"),
+  stageRow(6, "802a7573-7b6e-4f45-942a-37e0fa77594b", "Agreement sent"),
+  stageRow(7, "60ed85ef-5e19-49e0-a6ea-0884fe35abb8", "Under contract"),
+  stageRow(8, "3f154b00-0c74-4de6-ab65-79d665068e32", "closed"),
+  stageRow(9, "739c42be-e3a0-4b25-a70d-9c570ac49a5c", "Needs Follow up"),
+  stageRow(10, "392b72de-334e-4394-a8ca-2da2b16102a6", "Lost"),
 ];
 
 /**

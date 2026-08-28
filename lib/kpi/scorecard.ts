@@ -118,11 +118,22 @@ function evaluate(
     };
   }
 
+  // Gate 2b — the funnel has no stage representing a milestone this KPI
+  // depends on. Distinct from "no records": the milestone is unmeasurable,
+  // not empty.
+  if (definition.requiresMilestone && facts.untracked.includes(definition.requiresMilestone)) {
+    return {
+      ...base,
+      status: "insufficient_data",
+      statusReason: `No stage in ${facts.pipelineName} represents "${definition.requiresMilestone}", so this cannot be measured. Add a matching stage in GHL, or accept the milestone is untracked.`,
+    };
+  }
+
   // Gate 3 — nothing to divide.
   if (current.value === null) {
     const reason =
       current.pendingMaturation > 0
-        ? `No matured cohort yet — ${current.pendingMaturation} lead${current.pendingMaturation === 1 ? "" : "s"} in this window are still too new to score (needs ${definition.maturationDays} days).`
+        ? `No matured cohort yet — ${current.pendingMaturation} lead${current.pendingMaturation === 1 ? " in this window is" : "s in this window are"} still too new to score (needs ${definition.maturationDays} days).`
         : "No qualifying records in this window.";
     return { ...base, status: "insufficient_data", statusReason: reason };
   }
