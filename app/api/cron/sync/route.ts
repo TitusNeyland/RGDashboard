@@ -16,6 +16,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await runSync();
+  // Always incremental. A full sync takes minutes and this function caps at
+  // 60 seconds, so a full run here would time out partway through and leave
+  // the watermark unmoved — failing identically forever. Use
+  // `npm run sync -- --full` from a machine for a complete re-pull.
+  const result = await runSync({ full: false });
   return NextResponse.json(result);
 }

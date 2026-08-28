@@ -49,6 +49,22 @@ export const opportunities = pgTable("opportunities", {
 });
 
 /**
+ * Watermarks for incremental sync — the newest record timestamp successfully
+ * pulled per entity.
+ *
+ * A full sync takes minutes against RG's account, but the cron that runs it
+ * caps at 60 seconds, so a scheduled sync could never finish. Subsequent runs
+ * fetch only what changed since the watermark instead of everything.
+ */
+export const syncState = pgTable("sync_state", {
+  entity: text("entity").primaryKey(),
+  /** Newest source-record timestamp covered by the last successful sync. */
+  lastRecordAt: timestamp("last_record_at", { withTimezone: true }),
+  lastRunAt: timestamp("last_run_at", { withTimezone: true }).notNull().defaultNow(),
+  lastRunCount: integer("last_run_count").notNull().default(0),
+});
+
+/**
  * An RG employee, synced from GHL's users endpoint.
  *
  * `ghlRole` is GHL's own permission level ("admin" / "user") — it is NOT a

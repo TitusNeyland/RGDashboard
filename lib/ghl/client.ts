@@ -150,9 +150,19 @@ export class GhlClient {
    * GET /opportunities/search, paginated via the documented `startAfter` /
    * `startAfterId` cursor (from `meta` in each response page).
    */
-  async *iterateOpportunities(pageLimit = 100): AsyncGenerator<GhlOpportunity> {
+  async *iterateOpportunities(
+    pageLimit = 100,
+    options?: { updatedAfter?: Date }
+  ): AsyncGenerator<GhlOpportunity> {
     let startAfter: string | undefined;
     let startAfterId: string | undefined;
+
+    // There is no server-side "updated since" filter for opportunities — the
+    // `date` parameter filters createdAt, which would miss a lead created in
+    // January that moved stage yesterday, i.e. exactly what needs syncing.
+    // `order=updated_desc` IS honored (verified live), so sort newest-updated
+    // first and stop as soon as a page falls entirely behind the watermark.
+    const incremental = options?.updatedAfter;
 
     while (true) {
       const data = await this.request<{
@@ -164,10 +174,14 @@ export class GhlClient {
           limit: pageLimit,
           startAfter,
           startAfterId,
+          ...(incremental ? { order: "updated_desc" } : {}),
         },
       });
 
-      for (const opp of data.opportunities) yield opp;
+      for (const opp of data.opportunities) {
+        if (incremental && opp.updatedAt && new Date(opp.updatedAt) < incremental) return;
+        yield opp;
+      }
 
       if (data.opportunities.length < pageLimit) return;
       if (!data.meta?.startAfterId) return; // no cursor to continue with
@@ -183,8 +197,23 @@ export class GhlClient {
    * a real response (`npm run discover`) — if `searchAfter` isn't actually
    * there, this stops after page 1 rather than looping incorrectly.
    */
-  async *iterateContacts(pageLimit = 100): AsyncGenerator<GhlContact> {
+  async *iterateContacts(
+    pageLimit = 100,
+    options?: { updatedAfter?: Date }
+  ): AsyncGenerator<GhlContact> {
     let searchAfter: unknown[] | undefined;
+
+    // Verified against the live account: this filter is honored and
+    // monotonic, cutting 31,624 contacts to 17 for a recent watermark.
+    const filters = options?.updatedAfter
+      ? [
+          {
+            field: "dateUpdated",
+            operator: "range",
+            value: { gte: options.updatedAfter.toISOString() },
+          },
+        ]
+      : undefined;
 
     while (true) {
       const data = await this.request<{ contacts: GhlContact[]; count?: number }>(
@@ -194,6 +223,7 @@ export class GhlClient {
           body: JSON.stringify({
             locationId: this.locationId,
             pageLimit,
+            ...(filters ? { filters } : {}),
             ...(searchAfter ? { searchAfter } : {}),
           }),
         }

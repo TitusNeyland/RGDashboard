@@ -6,8 +6,8 @@
 import "dotenv/config";
 import { GhlClient, type GhlContact, type GhlOpportunity } from "@/lib/ghl/client";
 import { db } from "@/lib/db";
-import { contacts, opportunities, pipelineEvents, pipelineStages, users } from "@/drizzle/schema";
-import { getTableColumns, sql } from "drizzle-orm";
+import { contacts, opportunities, pipelineEvents, pipelineStages, users, syncState } from "@/drizzle/schema";
+import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { classifyStageEvent } from "@/lib/pipeline-events/classify";
 
@@ -88,8 +88,37 @@ function opportunityRow(
   };
 }
 
-async function main() {
+/**
+ * How far back to re-check beyond the watermark.
+ *
+ * Guards against clock skew between GHL and this app, and against records
+ * updated in the same second the previous run finished. Re-syncing a few
+ * extra rows is free — upserts are idempotent — while missing one means a
+ * stage change never reaches the event log.
+ */
+const WATERMARK_OVERLAP_MS = 10 * 60 * 1000;
+
+async function readWatermark(entity: string): Promise<Date | null> {
+  const [row] = await db
+    .select({ lastRecordAt: syncState.lastRecordAt })
+    .from(syncState)
+    .where(eq(syncState.entity, entity))
+    .limit(1);
+  if (!row?.lastRecordAt) return null;
+  return new Date(row.lastRecordAt.getTime() - WATERMARK_OVERLAP_MS);
+}
+
+async function writeWatermark(entity: string, newest: Date | null, count: number) {
+  const values = { lastRecordAt: newest, lastRunAt: new Date(), lastRunCount: count };
+  await db
+    .insert(syncState)
+    .values({ entity, ...values })
+    .onConflictDoUpdate({ target: syncState.entity, set: values });
+}
+
+async function main(options: { full?: boolean } = {}) {
   const client = new GhlClient();
+  const full = options.full === true;
 
   const pipelines = await client.listPipelines();
   const pipelineNames = new Map(pipelines.map((p) => [p.id, p.name]));
@@ -140,11 +169,22 @@ async function main() {
     }
   }
 
+  const contactsSince = full ? null : await readWatermark("contacts");
   const contactRows: Record<string, unknown>[] = [];
-  for await (const contact of client.iterateContacts()) contactRows.push(contactRow(contact));
+  let newestContactAt: Date | null = null;
+
+  for await (const contact of client.iterateContacts(100, {
+    updatedAfter: contactsSince ?? undefined,
+  })) {
+    contactRows.push(contactRow(contact));
+    const updated = contact.dateUpdated ? new Date(String(contact.dateUpdated)) : null;
+    if (updated && (!newestContactAt || updated > newestContactAt)) newestContactAt = updated;
+  }
+
   const contactCount = await batchUpsert(contacts, contactRows, contacts.ghlId, [
     "name", "email", "phone", "raw", "syncedAt",
   ]);
+  await writeWatermark("contacts", newestContactAt, contactCount);
 
   // Prior stage state for every opportunity in ONE query. Poll-diff needs to
   // compare against what we last stored, and doing that per row was the other
@@ -165,9 +205,19 @@ async function main() {
   const opportunityRows: Record<string, unknown>[] = [];
   const eventRows: Record<string, unknown>[] = [];
 
-  for await (const opp of client.iterateOpportunities()) {
+  const opportunitiesSince = full ? null : await readWatermark("opportunities");
+  let newestOpportunityAt: Date | null = null;
+
+  for await (const opp of client.iterateOpportunities(100, {
+    updatedAfter: opportunitiesSince ?? undefined,
+  })) {
     const row = opportunityRow(opp, pipelineNames, stageNames, userNames);
     opportunityRows.push(row);
+
+    const updated = opp.updatedAt ? new Date(opp.updatedAt) : null;
+    if (updated && (!newestOpportunityAt || updated > newestOpportunityAt)) {
+      newestOpportunityAt = updated;
+    }
 
     const existing = previous.get(row.ghlId);
     if (row.stageId != null && row.stageId !== existing?.stageId) {
@@ -202,14 +252,20 @@ async function main() {
      "ownerGhlId","ownerName","source","monetaryValue","raw","ghlCreatedAt","ghlUpdatedAt","syncedAt"]
   );
 
+  await writeWatermark("opportunities", newestOpportunityAt, opportunityCount);
+
   let eventCount = 0;
   for (let i = 0; i < eventRows.length; i += BATCH_SIZE) {
     await db.insert(pipelineEvents).values(eventRows.slice(i, i + BATCH_SIZE) as never);
     eventCount += Math.min(BATCH_SIZE, eventRows.length - i);
   }
 
+  const mode = full
+    ? "full"
+    : `incremental (contacts since ${contactsSince?.toISOString() ?? "never"})`;
   console.log(
-    `Synced ${userCount} users, ${stageCount} pipeline stages, ${contactCount} contacts, ${opportunityCount} opportunities, ${eventCount} pipeline events.`
+    `Synced [${mode}] ${userCount} users, ${stageCount} pipeline stages, ` +
+      `${contactCount} contacts, ${opportunityCount} opportunities, ${eventCount} pipeline events.`
   );
   return { userCount, stageCount, contactCount, opportunityCount, eventCount };
 }
@@ -217,7 +273,8 @@ async function main() {
 // Only auto-run when executed directly (`npm run sync`), not when imported
 // by the cron route handler.
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((err) => {
+  // `npm run sync -- --full` forces a complete re-pull, ignoring watermarks.
+  main({ full: process.argv.includes("--full") }).catch((err) => {
     console.error(err);
     process.exit(1);
   });
