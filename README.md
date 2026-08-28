@@ -58,3 +58,38 @@ campaign name onto leads at send time, no attribution is possible** — that's
 an operational fix (consistent source/tag naming), not a code one.
 
 In production (Vercel), the sync runs on a schedule via `/api/cron/sync` (see `vercel.json`), authenticated with the `CRON_SECRET` env var that Vercel Cron sends automatically.
+
+## Deploying
+
+**This app cannot be hosted on GitHub Pages.** Pages serves static files
+only, and every page here is server-rendered per request (`force-dynamic`),
+queries Postgres server-side, and ships API routes (`/api/cron/sync`,
+`/api/webhooks/ghl`). If Pages is enabled on the repo it will just render
+this README — turn it off under **Settings → Pages → Source: None**.
+
+Deploy to **Vercel** instead:
+
+1. Go to [vercel.com/new](https://vercel.com/new) and import
+   `TitusNeyland/RGDashboard`. Next.js is auto-detected — accept the
+   defaults and deploy.
+2. It will build and serve correctly with **no environment variables set**,
+   falling back to mock data (see `lib/load-pipeline-data.ts`), so you can
+   confirm the real UI works before wiring up credentials.
+3. Add the env vars from `.env.example` under **Settings → Environment
+   Variables** when ready, then redeploy and run a sync.
+
+Every push to `main` redeploys automatically once the project is linked.
+
+### Cron frequency
+
+`vercel.json` schedules the sync daily (`0 9 * * *`) because **Vercel's free
+Hobby plan rejects any cron more frequent than once a day** — a deployment
+with e.g. `*/30 * * * *` fails with "Hobby accounts are limited to daily
+cron jobs."
+
+This has a real consequence for pipeline event tracking: poll-diff detection
+only sees stage changes as often as the sync runs, so on a daily schedule
+several moves within one day collapse into one recorded event. On a Pro
+plan, change the schedule to `*/30 * * * *` for near-real-time history — or
+configure the GHL webhook (`/api/webhooks/ghl`), which captures changes as
+they happen regardless of cron frequency.
