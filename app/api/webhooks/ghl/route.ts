@@ -96,7 +96,14 @@ export async function POST(request: Request) {
       toStageName,
       toStatus: payload.status ?? null,
     }),
-    occurredAt: payload.dateAdded ? new Date(payload.dateAdded) : new Date(),
+    // Receipt time, NOT payload.dateAdded. In GHL's OpportunityStageUpdate
+    // payload `dateAdded` sits among the opportunity's own fields — it is
+    // when the OPPORTUNITY was created, not when this stage change happened.
+    // Using it stamped every event of a lead's life at that lead's creation
+    // instant, which collapses stage history and yields zero or negative
+    // time-in-stage. The webhook fires in real time, so receipt time is the
+    // best available estimate of the change.
+    occurredAt: new Date(),
     source: "webhook",
     // No actor field — GHL's OpportunityStageUpdate payload only reports
     // the opportunity's current assignee, not who made this change.

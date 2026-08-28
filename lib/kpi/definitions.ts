@@ -107,7 +107,7 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
     },
     blockedBy: null,
     caveat:
-      "Period throughput, not cohort conversion — a lead created in one window but booked in the next is credited to the later window.",
+      "Cohort rate: measured against leads created in the window, however long they later took to book. Recent windows exclude leads too new to have converted yet.",
   },
   {
     id: "appointment_to_offer",
