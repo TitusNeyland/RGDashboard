@@ -4,6 +4,7 @@ import type {
   opportunities,
   pipelineEvents,
   pipelineStages,
+  users,
 } from "@/drizzle/schema";
 
 type OpportunityRow = typeof opportunities.$inferSelect;
@@ -11,6 +12,7 @@ type ContactRow = typeof contacts.$inferSelect;
 type PipelineEventRow = typeof pipelineEvents.$inferSelect;
 type PipelineStageRow = typeof pipelineStages.$inferSelect;
 type CampaignRow = typeof campaigns.$inferSelect;
+type UserRow = typeof users.$inferSelect;
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000);
 
@@ -350,6 +352,58 @@ export const mockCampaigns: CampaignRow[] = [
     wrongNumbers: 5,
     costCents: 96000, // $960
     updatedAt: hoursAgo(1),
+  },
+];
+
+/**
+ * Mock employees. `teamRole` is RG's own classification — GHL only reports
+ * admin/user, so in production these come from `npm run import:team`.
+ * mock-owner-4 has no opportunities, to exercise the zero-activity case.
+ */
+export const mockUsers: UserRow[] = [
+  {
+    id: "mock-user-1",
+    ghlId: "mock-owner-1",
+    name: "Devin R.",
+    email: "devin@example.com",
+    phone: null,
+    ghlRole: "admin",
+    teamRole: "acquisitions",
+    raw: {},
+    syncedAt: hoursAgo(0.2),
+  },
+  {
+    id: "mock-user-2",
+    ghlId: "mock-owner-2",
+    name: "Priya K.",
+    email: "priya@example.com",
+    phone: null,
+    ghlRole: "user",
+    teamRole: "acquisitions",
+    raw: {},
+    syncedAt: hoursAgo(0.2),
+  },
+  {
+    id: "mock-user-3",
+    ghlId: "mock-owner-3",
+    name: "Marcus T.",
+    email: "marcus@example.com",
+    phone: null,
+    ghlRole: "user",
+    teamRole: "cold_caller",
+    raw: {},
+    syncedAt: hoursAgo(0.2),
+  },
+  {
+    id: "mock-user-4",
+    ghlId: "mock-owner-4",
+    name: "Ana L.",
+    email: "ana@example.com",
+    phone: null,
+    ghlRole: "user",
+    teamRole: "va",
+    raw: {},
+    syncedAt: hoursAgo(0.2),
   },
 ];
 

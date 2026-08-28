@@ -31,7 +31,7 @@ export function CampaignComparisonTable({ rows }: { rows: CampaignReportRow[] })
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="border-b border-black/[0.07] px-4 py-3 dark:border-white/10">
+      <CardHeader className="border-b border-black/[0.06] py-5 dark:border-white/10">
         <CardTitle className="flex items-center gap-2">
           <Scale className="h-4 w-4 text-muted-foreground" strokeWidth={2.25} />
           Campaign comparison

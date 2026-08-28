@@ -35,8 +35,8 @@ function money(value: number | null | undefined, fractionDigits = 0) {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-[13px] font-medium tabular-nums">{value}</p>
+      <p className="text-[12px] text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-[15px] font-medium tabular-nums">{value}</p>
     </div>
   );
 }
@@ -57,7 +57,7 @@ export function CampaignCard({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="border-b border-black/[0.07] px-4 py-3 dark:border-white/10">
+      <CardHeader className="border-b border-black/[0.06] py-5 dark:border-white/10">
         <CardTitle className="flex flex-wrap items-center gap-2">
           <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={2.25} />
           {row.name}
@@ -73,17 +73,17 @@ export function CampaignCard({
           )}
         </CardTitle>
         {campaign?.listName && (
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {campaign.listName}
             {campaign.market ? ` · ${campaign.market}` : ""}
           </p>
         )}
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-4 px-4 py-4">
+      <CardContent className="flex flex-col gap-5 py-5">
         {campaign && (
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-2.5 text-[12px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
               Delivery · imported from RG&apos;s sending tool
             </p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -105,7 +105,7 @@ export function CampaignCard({
         )}
 
         <div>
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-2.5 text-[12px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
             Pipeline results · computed from attributed leads
           </p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -122,7 +122,7 @@ export function CampaignCard({
 
         {campaign && (
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-2.5 text-[12px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
               Efficiency
             </p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-5">

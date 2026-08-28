@@ -14,6 +14,9 @@
 
 const BASE_URL = "https://services.leadconnectorhq.com";
 const API_VERSION = "v3";
+// GHL has not migrated every endpoint to v3 — /users/ still requires the
+// dated version header, and sending "v3" there fails.
+const LEGACY_API_VERSION = "2021-07-28";
 
 export interface GhlPipelineStage {
   id: string;
@@ -42,6 +45,17 @@ export interface GhlOpportunity {
   createdAt?: string;
   updatedAt?: string;
   lastStageChangeAt?: string;
+  [key: string]: unknown;
+}
+
+export interface GhlUser {
+  id: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  roles?: { type?: string; role?: string };
   [key: string]: unknown;
 }
 
@@ -77,7 +91,10 @@ export class GhlClient {
 
   private async request<T>(
     path: string,
-    init?: RequestInit & { query?: Record<string, string | number | boolean | undefined> }
+    init?: RequestInit & {
+      query?: Record<string, string | number | boolean | undefined>;
+      version?: string;
+    }
   ): Promise<T> {
     const url = new URL(BASE_URL + path);
     if (init?.query) {
@@ -90,7 +107,7 @@ export class GhlClient {
       ...init,
       headers: {
         Authorization: `Bearer ${this.token}`,
-        Version: API_VERSION,
+        Version: init?.version ?? API_VERSION,
         "Content-Type": "application/json",
         ...init?.headers,
       },
@@ -115,6 +132,18 @@ export class GhlClient {
       { query: { locationId: this.locationId } }
     );
     return data.pipelines;
+  }
+
+  /**
+   * GET /users/ — the location's employees. Uses the legacy version header
+   * (see LEGACY_API_VERSION); returns all users in one response, no paging.
+   */
+  async listUsers(): Promise<GhlUser[]> {
+    const data = await this.request<{ users: GhlUser[] }>("/users/", {
+      query: { locationId: this.locationId },
+      version: LEGACY_API_VERSION,
+    });
+    return data.users ?? [];
   }
 
   /**

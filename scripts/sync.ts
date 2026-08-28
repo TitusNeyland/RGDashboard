@@ -6,7 +6,7 @@
 import "dotenv/config";
 import { GhlClient, type GhlContact, type GhlOpportunity } from "@/lib/ghl/client";
 import { db } from "@/lib/db";
-import { contacts, opportunities, pipelineEvents, pipelineStages } from "@/drizzle/schema";
+import { contacts, opportunities, pipelineEvents, pipelineStages, users } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { classifyStageEvent } from "@/lib/pipeline-events/classify";
 
@@ -25,7 +25,12 @@ function contactRow(c: GhlContact) {
   };
 }
 
-function opportunityRow(o: GhlOpportunity, pipelineNames: Map<string, string>, stageNames: Map<string, string>) {
+function opportunityRow(
+  o: GhlOpportunity,
+  pipelineNames: Map<string, string>,
+  stageNames: Map<string, string>,
+  userNames: Map<string, string>
+) {
   return {
     ghlId: o.id,
     contactGhlId: o.contactId ?? null,
@@ -36,7 +41,7 @@ function opportunityRow(o: GhlOpportunity, pipelineNames: Map<string, string>, s
     stageName: o.pipelineStageId ? stageNames.get(o.pipelineStageId) ?? null : null,
     status: o.status ?? null,
     ownerGhlId: o.assignedTo ?? null,
-    ownerName: null, // promoted once a Phase 4 users sync exists
+    ownerName: o.assignedTo ? userNames.get(o.assignedTo) ?? null : null,
     source: o.source ?? null,
     monetaryValue: o.monetaryValue != null ? String(o.monetaryValue) : null,
     raw: o,
@@ -54,6 +59,31 @@ async function main() {
   const stageNames = new Map(
     pipelines.flatMap((p) => p.stages.map((s) => [s.id, s.name] as const))
   );
+
+  const ghlUsers = await client.listUsers();
+  const userNames = new Map<string, string>();
+  let userCount = 0;
+  for (const u of ghlUsers) {
+    const name =
+      [u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || u.email || null;
+    if (name) userNames.set(u.id, name);
+    // teamRole is intentionally NOT set here — GHL has no job-function
+    // concept, so a re-sync must never clobber what RG set via
+    // `npm run import:team`. New users default to "unassigned".
+    const update = {
+      name,
+      email: u.email ?? null,
+      phone: u.phone ?? null,
+      ghlRole: u.roles?.role ?? null,
+      raw: u as unknown as Record<string, unknown>,
+      syncedAt: new Date(),
+    };
+    await db
+      .insert(users)
+      .values({ ghlId: u.id, ...update })
+      .onConflictDoUpdate({ target: users.ghlId, set: update });
+    userCount++;
+  }
 
   let stageCount = 0;
   for (const pipeline of pipelines) {
@@ -86,7 +116,7 @@ async function main() {
   let opportunityCount = 0;
   let eventCount = 0;
   for await (const opp of client.iterateOpportunities()) {
-    const { ghlId, ...update } = opportunityRow(opp, pipelineNames, stageNames);
+    const { ghlId, ...update } = opportunityRow(opp, pipelineNames, stageNames, userNames);
 
     // Poll-diff pipeline event tracking (see drizzle/schema.ts pipelineEvents
     // doc comment): GHL doesn't hand us stage-change history, so we detect
@@ -136,9 +166,9 @@ async function main() {
   }
 
   console.log(
-    `Synced ${stageCount} pipeline stages, ${contactCount} contacts, ${opportunityCount} opportunities, ${eventCount} pipeline events.`
+    `Synced ${userCount} users, ${stageCount} pipeline stages, ${contactCount} contacts, ${opportunityCount} opportunities, ${eventCount} pipeline events.`
   );
-  return { stageCount, contactCount, opportunityCount, eventCount };
+  return { userCount, stageCount, contactCount, opportunityCount, eventCount };
 }
 
 // Only auto-run when executed directly (`npm run sync`), not when imported

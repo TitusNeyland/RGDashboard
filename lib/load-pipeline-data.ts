@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { campaigns, contacts, opportunities, pipelineEvents, pipelineStages } from "@/drizzle/schema";
+import { campaigns, contacts, opportunities, pipelineEvents, pipelineStages, users } from "@/drizzle/schema";
 import { asc, desc } from "drizzle-orm";
 import {
   mockCampaigns,
@@ -7,16 +7,8 @@ import {
   mockOpportunities,
   mockPipelineEvents,
   mockPipelineStages,
+  mockUsers,
 } from "@/lib/mock-data";
-
-/** Most recent sync timestamp across synced opportunities, for the page header. */
-function latestSyncedAt(rows: { syncedAt: Date }[]): Date | null {
-  let latest: Date | null = null;
-  for (const row of rows) {
-    if (!latest || row.syncedAt > latest) latest = row.syncedAt;
-  }
-  return latest;
-}
 
 /**
  * Shared by every dashboard page: real GHL-synced data when a database is
@@ -25,13 +17,14 @@ function latestSyncedAt(rows: { syncedAt: Date }[]): Date | null {
  */
 export async function loadPipelineData() {
   try {
-    const [opportunityRows, contactRows, eventRows, stageRows, campaignRows] =
+    const [opportunityRows, contactRows, eventRows, stageRows, campaignRows, userRows] =
       await Promise.all([
         db.select().from(opportunities).orderBy(desc(opportunities.ghlUpdatedAt)),
         db.select().from(contacts),
         db.select().from(pipelineEvents).orderBy(desc(pipelineEvents.occurredAt)),
         db.select().from(pipelineStages).orderBy(asc(pipelineStages.position)),
         db.select().from(campaigns).orderBy(asc(campaigns.name)),
+        db.select().from(users).orderBy(asc(users.name)),
       ]);
     return {
       opportunities: opportunityRows,
@@ -39,7 +32,7 @@ export async function loadPipelineData() {
       events: eventRows,
       stages: stageRows,
       campaigns: campaignRows,
-      lastSyncedAt: latestSyncedAt(opportunityRows),
+      users: userRows,
       usingMockData: false,
     };
   } catch {
@@ -49,7 +42,7 @@ export async function loadPipelineData() {
       events: mockPipelineEvents,
       stages: mockPipelineStages,
       campaigns: mockCampaigns,
-      lastSyncedAt: latestSyncedAt(mockOpportunities),
+      users: mockUsers,
       usingMockData: true,
     };
   }

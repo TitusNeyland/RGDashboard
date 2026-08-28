@@ -18,10 +18,10 @@ export function WeeklyFunnelChart({ rollup }: { rollup: WeeklyRollup }) {
           This week
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2.5 px-4">
+      <CardContent className="flex flex-col gap-4">
         {rows.map((row, i) => (
           <div key={row.label} className="flex items-center gap-4">
-            <div className="w-28 shrink-0 truncate text-[12px] text-muted-foreground">
+            <div className="w-28 shrink-0 truncate text-[13px] text-muted-foreground">
               {row.label}
             </div>
             <div className="flex h-2.5 flex-1 items-center">
@@ -29,7 +29,7 @@ export function WeeklyFunnelChart({ rollup }: { rollup: WeeklyRollup }) {
                 className={`h-2.5 rounded-full ${stageColorClass(i)}`}
                 style={{ width: `${Math.max(3, (row.count / max) * 100)}%` }}
               />
-              <span className="ml-3 text-[12px] font-medium tabular-nums">{row.count}</span>
+              <span className="ml-3 text-[13px] font-medium tabular-nums">{row.count}</span>
             </div>
           </div>
         ))}

@@ -34,6 +34,7 @@ Stack: Next.js (App Router, TypeScript) + Postgres (Neon) + Drizzle ORM + Tailwi
 - `npm run discover` — dump raw GHL payloads for schema/field verification
 - `npm run sync` — one-off sync of pipelines, contacts + opportunities into Postgres
 - `npm run import:campaigns -- <file.csv>` — load campaign delivery numbers (see below)
+- `npm run import:team -- <file.csv>` — assign job-function roles to users (see below)
 - `npm run db:push` / `db:generate` / `db:studio` — Drizzle schema management
 
 ## Campaign reporting
@@ -58,6 +59,28 @@ campaign name onto leads at send time, no attribution is possible** — that's
 an operational fix (consistent source/tag naming), not a code one.
 
 In production (Vercel), the sync runs on a schedule via `/api/cron/sync` (see `vercel.json`), authenticated with the `CRON_SECRET` env var that Vercel Cron sends automatically.
+
+## Team roles
+
+`npm run sync` pulls RG's employees from GHL, but GHL only records a
+permission level (`admin` / `user`) — it has no concept of cold caller vs
+VA vs acquisitions. That classification is RG's own, so set it with:
+
+```bash
+npm run import:team -- team.csv
+```
+
+See `team.example.csv`. Users are matched by email (or `ghl_id`) and must
+already be synced; `sync` never overwrites `team_role`, so re-syncing is
+safe. Anyone not in the file shows under "Unassigned role" rather than
+being hidden.
+
+**Attribution caveat:** `/team` credits whoever *currently owns* a lead,
+not whoever did the work. GHL reports an opportunity's assignee but never
+the user behind a stage change (`pipeline_events.actor_ghl_id` is
+effectively always null), so a reassigned lead carries its full history to
+its new owner. These are workload-and-outcome-per-owner figures, not
+individual performance scores.
 
 ## Deploying
 

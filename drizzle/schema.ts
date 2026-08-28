@@ -49,6 +49,31 @@ export const opportunities = pgTable("opportunities", {
 });
 
 /**
+ * An RG employee, synced from GHL's users endpoint.
+ *
+ * `ghlRole` is GHL's own permission level ("admin" / "user") — it is NOT a
+ * job function. GHL has no concept of "cold caller" vs "acquisitions", so
+ * `teamRole` is RG's own classification, set via `npm run import:team` and
+ * left as "unassigned" until they do. Reports group by it, so an
+ * unclassified user still appears rather than disappearing from the totals.
+ */
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ghlId: text("ghl_id").notNull().unique(),
+  name: text("name"),
+  email: text("email"),
+  phone: text("phone"),
+  ghlRole: text("ghl_role"),
+  teamRole: text("team_role", {
+    enum: ["cold_caller", "va", "acquisitions", "apprentice", "lead_manager", "unassigned"],
+  })
+    .notNull()
+    .default("unassigned"),
+  raw: jsonb("raw").notNull(),
+  syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * A marketing campaign (an SMS blast, a cold-call list, etc.) and its
  * delivery-side numbers.
  *
