@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1787872126062,
+      "tag": "0000_eminent_nekra",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787875769928,
+      "tag": "0001_supreme_taskmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787876679895,
+      "tag": "0002_striped_dreadnoughts",
+      "breakpoints": true
+    }
+  ]
+}
