@@ -25,6 +25,20 @@ export type HealthyDirection = "higher_is_better" | "lower_is_better";
 
 export type KpiFormat = "percent" | "currency" | "number" | "days" | "ratio";
 
+/**
+ * How a measurement window applies to a KPI.
+ *
+ * - `cohort`   — anchored on a set of leads (created, or crossing a milestone,
+ *   inside the window) and asks what share of THAT SET later converted. The
+ *   only defensible basis for a rate: a flow rate divides two different lead
+ *   sets, so it can exceed 100% and cannot be thresholded or baselined.
+ * - `flow`     — counts what happened inside the window. Correct for counts
+ *   and sums (deals closed, revenue).
+ * - `all_time` — the window does not apply, because the source data has no
+ *   time dimension at all. Chiefly imported campaign spend.
+ */
+export type KpiWindowMode = "cohort" | "flow" | "all_time";
+
 /** The §8 self-explanation block. Every KPI must be able to explain itself. */
 export interface KpiExplanation {
   whatItMeasures: string;
@@ -52,6 +66,14 @@ export interface KpiDefinition {
   criticalThreshold: number | null;
   /** Below this denominator the KPI reports INSUFFICIENT_DATA, never a status. */
   minSampleSize: number;
+  windowMode: KpiWindowMode;
+  /**
+   * Days a cohort member needs before its outcome can be called final.
+   * Members younger than this are excluded from the denominator and reported
+   * separately as pending, so a recent window is never made to look like a
+   * conversion collapse simply because its leads are still new.
+   */
+  maturationDays: number;
   owner: string;
   relatedKpis: string[];
   likelyCauses: string[];
@@ -70,6 +92,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   // ---------------------------------------------------------------- conversion
   {
     id: "lead_to_appointment",
+    windowMode: "cohort",
+    maturationDays: 14,
     name: "Lead → Appointment",
     category: "conversion",
     description: "Share of new leads that produce a booked appointment.",
@@ -111,6 +135,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "appointment_to_offer",
+    windowMode: "cohort",
+    maturationDays: 14,
     name: "Appointment → Offer",
     category: "conversion",
     description: "Share of appointments that result in an offer being made.",
@@ -147,6 +173,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "offer_to_contract",
+    windowMode: "cohort",
+    maturationDays: 21,
     name: "Offer → Contract",
     category: "conversion",
     description: "How effectively offers are converted into signed agreements.",
@@ -187,6 +215,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "contract_to_close",
+    windowMode: "cohort",
+    maturationDays: 45,
     name: "Contract → Close",
     category: "conversion",
     description: "Share of signed contracts that reach a closing.",
@@ -223,6 +253,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "win_rate",
+    windowMode: "cohort",
+    maturationDays: 60,
     name: "Win Rate",
     category: "conversion",
     description: "Share of contracted opportunities marked won.",
@@ -250,6 +282,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   // ------------------------------------------------------------------ revenue
   {
     id: "deals_closed",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Deals Closed",
     category: "revenue",
     description: "Count of deals completed in the period.",
@@ -275,6 +309,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "gross_revenue",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Gross Revenue",
     category: "revenue",
     description: "Total assignment fees earned on deals closed in the period.",
@@ -301,6 +337,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "avg_assignment_fee",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Average Assignment Fee",
     category: "revenue",
     description: "Mean fee earned per closed deal.",
@@ -326,6 +364,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "median_assignment_fee",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Median Assignment Fee",
     category: "revenue",
     description: "Midpoint fee — resistant to one unusually large deal.",
@@ -351,6 +391,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "min_assignment_fee",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Minimum Assignment Fee",
     category: "revenue",
     description: "Smallest fee accepted in the period.",
@@ -378,6 +420,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   // ---------------------------------------------------------------- marketing
   {
     id: "marketing_spend",
+    windowMode: "all_time",
+    maturationDays: 0,
     name: "Marketing Spend",
     category: "marketing",
     description: "Total recorded campaign spend.",
@@ -405,6 +449,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "cost_per_contract",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Cost per Contract",
     category: "efficiency",
     description: "Marketing cost to produce one signed contract.",
@@ -431,6 +477,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "cost_per_qualified_lead",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Cost per Qualified Lead",
     category: "efficiency",
     description: "Marketing cost to produce one qualified lead.",
@@ -457,6 +505,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "marketing_roi",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Marketing ROI",
     category: "marketing",
     description: "Return on recorded marketing spend.",
@@ -469,7 +519,7 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
     healthyDirection: "higher_is_better",
     warningThreshold: 100,
     criticalThreshold: 0,
-    minSampleSize: 1,
+    minSampleSize: 3,
     owner: "Management",
     relatedKpis: ["fee_to_cost_ratio", "cost_per_contract"],
     likelyCauses: ["Conversion rates", "Fee size", "Spend efficiency"],
@@ -483,6 +533,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "fee_to_cost_ratio",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Fee-to-Cost Ratio",
     category: "efficiency",
     description: "Revenue earned per dollar of marketing spend.",
@@ -495,7 +547,7 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
     healthyDirection: "higher_is_better",
     warningThreshold: 2,
     criticalThreshold: 1,
-    minSampleSize: 1,
+    minSampleSize: 3,
     owner: "Management",
     relatedKpis: ["marketing_roi"],
     likelyCauses: ["Fee size", "Spend efficiency"],
@@ -509,6 +561,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "reply_rate",
+    windowMode: "all_time",
+    maturationDays: 0,
     name: "Reply Rate",
     category: "marketing",
     description: "Share of delivered messages that received a reply.",
@@ -542,6 +596,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   // ----------------------------------------------------------------- velocity
   {
     id: "pipeline_velocity",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Pipeline Velocity",
     category: "velocity",
     description: "Average days from lead creation to a signed contract.",
@@ -569,6 +625,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "avg_days_in_stage",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Average Days in Stage",
     category: "velocity",
     description: "Mean time an opportunity spends in a stage before moving on.",
@@ -597,6 +655,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   // ------------------------------------------------------------------ quality
   {
     id: "fallout_rate",
+    windowMode: "cohort",
+    maturationDays: 30,
     name: "Fallout Rate",
     category: "quality",
     description: "Share of contracted deals that later died.",
@@ -631,6 +691,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   // ------------------------------------------------- blocked: no data source
   {
     id: "speed_to_lead",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Speed to Lead",
     category: "velocity",
     description: "Time between a lead arriving and RG's first contact attempt.",
@@ -657,6 +719,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "appointment_held_rate",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Appointment Held Rate",
     category: "quality",
     description: "Share of set appointments that were actually held.",
@@ -682,6 +746,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "net_profit",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Net Profit",
     category: "revenue",
     description: "Revenue less all costs.",
@@ -707,6 +773,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "fee_retention",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Fee Retention",
     category: "quality",
     description: "How much of the projected fee survives to closing.",
@@ -733,6 +801,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "dispo_time_to_buyer",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Dispo Time-to-Buyer",
     category: "velocity",
     description: "Days from contract signed to buyer assigned.",
@@ -758,6 +828,8 @@ export const KPI_DEFINITIONS: KpiDefinition[] = [
   },
   {
     id: "buyer_depth",
+    windowMode: "flow",
+    maturationDays: 0,
     name: "Buyer Depth",
     category: "quality",
     description: "How many active buyers are available per contract.",
