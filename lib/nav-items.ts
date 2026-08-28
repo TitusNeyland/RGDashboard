@@ -1,4 +1,4 @@
-import { LayoutDashboard, LayoutGrid, Flag, Activity, Megaphone, Users } from "lucide-react";
+import { LayoutDashboard, LayoutGrid, Flag, Activity, Megaphone, Users, Gauge } from "lucide-react";
 
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -7,4 +7,5 @@ export const NAV_ITEMS = [
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/team", label: "Team", icon: Users },
+  { href: "/kpi", label: "KPI", icon: Gauge },
 ] as const;
