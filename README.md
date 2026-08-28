@@ -84,24 +84,41 @@ individual performance scores.
 
 ## Deploying
 
-**This app cannot be hosted on GitHub Pages.** Pages serves static files
-only, and every page here is server-rendered per request (`force-dynamic`),
-queries Postgres server-side, and ships API routes (`/api/cron/sync`,
-`/api/webhooks/ghl`). If Pages is enabled on the repo it will just render
-this README — turn it off under **Settings → Pages → Source: None**.
+There are two deployments, and they are not equivalent.
 
-Deploy to **Vercel** instead:
+### Vercel — the real app
 
-1. Go to [vercel.com/new](https://vercel.com/new) and import
-   `TitusNeyland/RGDashboard`. Next.js is auto-detected — accept the
-   defaults and deploy.
-2. It will build and serve correctly with **no environment variables set**,
-   falling back to mock data (see `lib/load-pipeline-data.ts`), so you can
-   confirm the real UI works before wiring up credentials.
-3. Add the env vars from `.env.example` under **Settings → Environment
-   Variables** when ready, then redeploy and run a sync.
+Everything works: live GHL data, the scheduled sync, and the webhook
+receiver.
+
+1. Go to [vercel.com/new](https://vercel.com/new) and import the repo.
+   Next.js is auto-detected — accept the defaults and deploy.
+2. It builds and serves correctly with **no environment variables set**,
+   falling back to mock data (`lib/load-pipeline-data.ts`), so you can
+   confirm the UI works before wiring up credentials.
+3. Add the vars from `.env.example` under **Settings → Environment
+   Variables**, redeploy, then run a sync.
 
 Every push to `main` redeploys automatically once the project is linked.
+
+### GitHub Pages — a static demo only
+
+`.github/workflows/pages.yml` publishes a **frozen snapshot rendered from
+mock data**. Enable it under **Settings → Pages → Source: GitHub Actions**
+(not "Deploy from a branch" — that serves this README).
+
+Pages serves static files, so the demo permanently cannot:
+
+- show live GHL data (every page is prerendered at build time),
+- run `/api/cron/sync` or `/api/webhooks/ghl` (both are stripped),
+- read the database — adding credentials changes nothing there.
+
+`scripts/prepare-static-demo.mjs` removes the API routes, converts
+`force-dynamic` pages to `force-static`, and swaps the server `redirect()`
+at `/` for a client-side one. It rewrites files in place and runs only in
+CI, against a throwaway checkout.
+
+Use it to show people the interface. Use Vercel for anything real.
 
 ### Cron frequency
 

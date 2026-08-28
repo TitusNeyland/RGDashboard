@@ -1,0 +1,73 @@
+# Publishes a STATIC DEMO of the dashboard to GitHub Pages.
+#
+# This is not the real app. GitHub Pages serves static files only, so the
+# published site is a snapshot rendered from mock data at build time — no
+# GHL sync, no webhook receiver, no database. Adding credentials changes
+# nothing here. Deploy to Vercel for the working product (see README).
+#
+# scripts/prepare-static-demo.mjs strips what static hosting can't serve.
+# It edits files in place, which is safe because this runs against a
+# throwaway CI checkout that is never committed back.
+name: Deploy static demo to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow the workflow to publish to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let an in-flight deploy finish rather than cancelling it mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Strip server-only features
+        run: node scripts/prepare-static-demo.mjs
+
+      - name: Build static export
+        env:
+          STATIC_EXPORT: "true"
+          # Pages serves a project site under /<repo>. Change to "" if you
+          # ever put this on a custom domain served from the root.
+          PAGES_BASE_PATH: /${{ github.event.repository.name }}
+        run: npx next build
+
+      # Belt and braces: actions/deploy-pages does not run Jekyll, but this
+      # keeps the _next directory intact if the deploy source ever changes
+      # to a branch, where Jekyll would otherwise drop underscore folders.
+      - name: Disable Jekyll
+        run: touch out/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
