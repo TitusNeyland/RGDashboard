@@ -21,6 +21,27 @@
 import { readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+/**
+ * Refuse to run outside CI without an explicit override.
+ *
+ * This script deletes app/api, proxy.ts and app/login, and rewrites page
+ * files in place. Running it against a working tree destroys uncommitted
+ * work, and `git checkout` cannot undo it for files that are not yet tracked
+ * — which is exactly how the password gate and two page configs were lost
+ * once already. Test the static build against a copy, not your checkout.
+ */
+if (!process.env.CI && process.env.ALLOW_DESTRUCTIVE_STATIC_PREP !== "true") {
+  console.error(
+    "Refusing to run: this rewrites and deletes files in place.\n" +
+      "It is meant for CI against a throwaway checkout.\n\n" +
+      "To test the static build locally, copy the repo first:\n" +
+      "  git archive --format=tar HEAD | (mkdir -p /tmp/demo && tar -x -C /tmp/demo)\n\n" +
+      "Or, if you really mean to mutate this checkout:\n" +
+      "  ALLOW_DESTRUCTIVE_STATIC_PREP=true node scripts/prepare-static-demo.mjs"
+  );
+  process.exit(1);
+}
+
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -34,6 +55,12 @@ function walk(dir) {
 // 1. Drop API routes.
 rmSync("app/api", { recursive: true, force: true });
 console.log("removed app/api (no server on GitHub Pages)");
+
+// 1b. Drop the password gate and login screen. Static export has no server to
+// run proxy.ts, and the demo contains only mock data so it needs no gate.
+rmSync("proxy.ts", { force: true });
+rmSync("app/login", { recursive: true, force: true });
+console.log("removed proxy.ts + app/login (mock-data demo needs no gate)");
 
 // 2. Make every page statically renderable.
 let rewritten = 0;

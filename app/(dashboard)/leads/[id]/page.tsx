@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calculator, FileText } from "lucide-react";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 /**
  * Prerendered lead pages.

@@ -2,7 +2,7 @@ import { loadPipelineData } from "@/lib/load-pipeline-data";
 import { buildScorecard } from "@/lib/kpi/scorecard";
 import { ScorecardClient } from "@/components/kpi/scorecard-client";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export default async function KpiPage() {
   const data = await loadPipelineData();
