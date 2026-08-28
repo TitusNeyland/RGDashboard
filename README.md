@@ -82,6 +82,36 @@ effectively always null), so a reassigned lead carries its full history to
 its new owner. These are workload-and-outcome-per-owner figures, not
 individual performance scores.
 
+## AI layer
+
+Open any lead from the pipeline table to see it. The page is split
+deliberately:
+
+- **Computed facts** — days since update, days in stage, stage history,
+  open flags. Plain code (`lib/rules`, `lib/pipeline-events`). A model is
+  never asked to count or measure, so it can't get arithmetic wrong.
+- **AI read / acquisition brief** — summary, seller motivation, price
+  objections, still-interested, recommended follow-up. The only place
+  judgment is used.
+
+**Currently returns placeholders and calls no model.** Everything is
+labeled "Placeholder" on screen, because invented motivation reads are
+indistinguishable from real ones once rendered and a rep would act on
+them.
+
+To switch it on, set `AI_PROVIDER=openai` and `OPENAI_API_KEY` (both are
+required — a stray key alone won't start billing). `lib/ai/openai-provider.ts`
+is written but **unverified against the live API**; confirm one lead
+parses before trusting it, and check `OPENAI_MODEL` names a model your
+account can use.
+
+**It will still be of limited use until GHL conversations are synced.**
+There are no seller messages to read, so every judgment field correctly
+reports "unknown" rather than guessing from pipeline stage. That sync is
+the same missing piece blocking response time on `/team`. When it lands,
+fill in `conversation` and `conversationsAvailable` in
+`lib/ai/context.ts` — nothing else in the AI layer changes.
+
 ## Deploying
 
 There are two deployments, and they are not equivalent.
